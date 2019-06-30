@@ -6,12 +6,49 @@
         <title>My first Bootstrap-Vue app</title>
         <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
         <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
+        <link href="https://fonts.googleapis.com/css?family=Mitr:400,700&display=swap" rel="stylesheet">
     </head>
             
     <body>
         <div id="app">
-            <p>{{msg}}</p>
-            <button @click="sayHello">Hi!</button>
+            <div class="back">
+
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-md-6">
+                        <div class="left">
+
+                            <div class="title">
+                                <p>MADCATZ</p>
+                            </div>
+
+                            <div class="description">
+                                please upload your photo.<br>
+                                we judge that !
+                            </div>
+
+                            <div class="circlebox">
+                                <div class="circle">
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="right">
+                                <p>sasa</p>
+                        </div>
+                    </div>
+
+                 </div>
+            </div>
+
+
+
+            </div>
         </div>
 
 
@@ -34,5 +71,49 @@
           }
         })
         </script>
+        <style scoped>
+            .back{
+                background-color: #F2EFED;
+                color: #17302E;
+                width: 100vw;
+                height: 100vh;
+                position: relative;
+                font-family: 'Mitr', sans-serif;
+            }
+            .left{
+                /* background-color: aqua; */
+                height: 100vh;
+            }
+            .right{
+                /* background-color: azure; */
+                height: 100vh;
+            }
+            .title{
+                /* background-color: beige; */
+                height: 15%;
+                font-size: 40px;
+                font-weight: bold;
+                text-align: center;
+                padding: 1.5em 0 0em 1em;
+                
+            }
+            .description{
+                /* background-color: azure; */
+                height: 20%;
+                font-size: 25px;
+                text-align: center;
+                padding: 3em 0 0em 1em;
+            }
+            .circlebox{
+                padding: 100px;
+            }
+            .circle{
+                border: solid 3px #000000;
+                height: 30%; 
+                width: 100%;
+                border-radius:67% 19% 44% / 35% 100% 76%;
+                margin: auto;
+            }
+        </style>
     </body>
     </html>
