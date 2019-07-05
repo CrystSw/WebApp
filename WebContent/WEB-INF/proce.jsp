@@ -15,7 +15,7 @@ String getTimeString(){
 }
 
 /*
-	セータベース制御クラス
+	データベース制御クラス
 */
 public class DatabaseAccess{
 	private Connection conn;
