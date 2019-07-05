@@ -48,7 +48,7 @@ String getBase64ofImage(String impath) throws IOException {
 	データベース制御クラス
 */
 public class DatabaseAccess{
-	private Connection conn;
+	private Connection conn = null;
 	private Statement state;
 	private ResultSet rs;
 
@@ -75,11 +75,28 @@ public class DatabaseAccess{
 	}
 
 	/*
-		データベースとの接続を切断する．
+		デストラクタ呼び出し
+		※実行される保証はないので，できる限り明示的にデストラクタを呼び出してください．
+	*/
+	@Override
+	protected void finalize() throws Throwable{
+		try {
+			super.finalize();
+		} finally {
+			destructor();
+		}
+	}
+
+	/*
+		デストラクタ
+		データベースとの接続を明示的に切断する．
 		※このメソッド実行後はインスタンスにアクセスしないでください．
 	*/
-	public void destruct() throws SQLException{
-		conn.close();
+	public void destructor() throws SQLException{
+		if(conn != null){
+			conn.close();
+			conn = null;
+		}
 	}
 }
 %>
