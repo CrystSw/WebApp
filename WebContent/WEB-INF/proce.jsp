@@ -7,7 +7,7 @@
 
 	@return 現在時刻の文字列
 */
-String getFileNameFromTime(){
+String getTimeString(){
 	String name = "";
 	Date now = new Date();
 	SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
@@ -18,7 +18,7 @@ String getFileNameFromTime(){
 /*-----ファイルアップロード機能の実装-----*/
 Part part = request.getPart("file");
 //ファイル名は現在時刻から決定する
-String name = getFileNameFromTime();
+String name = getTimeString();
 //"/WEB-INF/upload/"に書き込む(上限2MB)
 part.write(getServletContext().getRealPath("/WEB-INF/upload")+"/"+name);
 
