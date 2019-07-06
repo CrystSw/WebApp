@@ -7,7 +7,7 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="javax.imageio.ImageIO" %>
 <%!
-/*
+/**
 	現在時刻を文字列で返す
 
 	@return 現在時刻の文字列
@@ -19,7 +19,24 @@ String getTimeString(){
 	return df.format(now);
 }
 
-/*
+/**
+	ファイルの拡張子を取得する
+
+	@param part - Partオブジェクト
+*/
+public String getFileExtension(Part part) {
+	String name = null;
+    for (String dispotion : part.getHeader("Content-Disposition").split(";")) {
+        if (dispotion.trim().startsWith("filename")) {
+            name = dispotion.substring(dispotion.indexOf("=") + 1).replace("\"", "").trim();
+            name = name.substring(name.lastIndexOf(".") + 1);
+            break;
+        }
+    }
+    return name;
+}
+
+/**
 	指定したパスに存在する画像をBase64エンコードする
 
 	@param impath - 画像ファイルへのパス
@@ -44,7 +61,7 @@ String getBase64ofImage(String impath) throws IOException {
     return base64;
 }
 
-/*
+/**
 	データベース制御クラス
 */
 public class DatabaseAccess{
@@ -52,7 +69,7 @@ public class DatabaseAccess{
 	private Statement state;
 	private ResultSet rs;
 
-	/*
+	/**
 		指定したデータベースへの接続を確立する
 
 		@param dbpath - データベースファイルへのパス
@@ -62,7 +79,7 @@ public class DatabaseAccess{
 		conn = DriverManager.getConnection(dbpath);
 	}
 
-	/*
+	/**
 		SQLを実行し，ResultSetを返す．
 
 		@param sql - エスケープされたSQL文
@@ -74,7 +91,7 @@ public class DatabaseAccess{
 		return rs;
 	}
 
-	/*
+	/**
 		デストラクタ呼び出し
 		※実行される保証はないので，できる限り明示的にデストラクタを呼び出してください．
 	*/
@@ -87,7 +104,7 @@ public class DatabaseAccess{
 		}
 	}
 
-	/*
+	/**
 		デストラクタ
 		データベースとの接続を明示的に切断する．
 		※このメソッド実行後はインスタンスにアクセスしないでください．
