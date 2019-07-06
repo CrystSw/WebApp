@@ -26,14 +26,14 @@ String getTimeString(){
 */
 public String getFileExtension(Part part) {
 	String name = null;
-    for (String dispotion : part.getHeader("Content-Disposition").split(";")) {
-        if (dispotion.trim().startsWith("filename")) {
-            name = dispotion.substring(dispotion.indexOf("=") + 1).replace("\"", "").trim();
-            name = name.substring(name.lastIndexOf(".") + 1);
-            break;
-        }
-    }
-    return name;
+	for(String dispotion : part.getHeader("Content-Disposition").split(";")) {
+		if(dispotion.trim().startsWith("filename")) {
+			name = dispotion.substring(dispotion.indexOf("=") + 1).replace("\"", "").trim();
+			name = name.substring(name.lastIndexOf(".") + 1);
+			break;
+		}
+	}
+	return name;
 }
 
 /**
@@ -52,14 +52,14 @@ String getBase64ofImage(String impath, String fext) throws IOException {
 
 	//バイナリデータをバイト配列へ格納する
 	ImageIO.write(image, fext, bos);
-    bos.flush();
-    bos.close();
-    byte[] bImage = baos.toByteArray();
+	bos.flush();
+	bos.close();
+	byte[] bImage = baos.toByteArray();
 
-    //バイト配列をBase64エンコードする
-    String base64 = Base64.getEncoder().encodeToString(bImage);
+	//バイト配列をBase64エンコードする
+	String base64 = Base64.getEncoder().encodeToString(bImage);
 
-    return base64;
+	return base64;
 }
 
 /**
