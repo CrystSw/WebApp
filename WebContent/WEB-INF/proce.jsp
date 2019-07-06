@@ -99,14 +99,20 @@ public class DatabaseAccess{
 		}
 	}
 }
+
 %>
 <%
+/*-----投稿者名の取得-----*/
+String user = request.getParameter("u");
+
 /*-----ファイルアップロード機能の実装-----*/
+/*未対応形式の場合の処理については後で実装します．*/
 Part part = request.getPart("file");
 //ファイル名は現在時刻から決定する
-String name = getTimeString();
+String filename = getTimeString();
 //"/WEB-INF/upload/"に書き込む(上限2MB)
-part.write(getServletContext().getRealPath("/WEB-INF/upload")+"/"+name);
+part.write(getServletContext().getRealPath("/WEB-INF/upload")+"/"+filename);
+
 
 
 %>
