@@ -40,8 +40,9 @@ public String getFileExtension(Part part) {
 	指定したパスに存在する画像をBase64エンコードする
 
 	@param impath - 画像ファイルへのパス
+	@paran fext - ファイル拡張子(ファイルタイプ)
 */
-String getBase64ofImage(String impath) throws IOException {
+String getBase64ofImage(String impath, String fext) throws IOException {
 	//画像を読み込む
 	File file = new File(impath);
 	BufferedImage image = ImageIO.read(file);
@@ -50,7 +51,7 @@ String getBase64ofImage(String impath) throws IOException {
 	image.flush();
 
 	//バイナリデータをバイト配列へ格納する
-	ImageIO.write(image, "png", bos);
+	ImageIO.write(image, fext, bos);
     bos.flush();
     bos.close();
     byte[] bImage = baos.toByteArray();
@@ -124,11 +125,21 @@ String user = request.getParameter("u");
 
 /*-----ファイルアップロード機能の実装-----*/
 /*未対応形式の場合の処理については後で実装します．*/
+//アップロードされた画像ファイルを補完するパス
+String uploadPath = getServletContext().getRealPath("/WEB-INF/upload")+"/";
+
 Part part = request.getPart("file");
-//ファイル名は現在時刻から決定する
+//ファイルの拡張子を取得する．
+String fext = getFileExtension(part);
+//ファイル名は現在時刻から決定する．
 String filename = getTimeString();
-//"/WEB-INF/upload/"に書き込む(上限2MB)
-part.write(getServletContext().getRealPath("/WEB-INF/upload")+"/"+filename);
+//ファイルの書き込み(上限2MB)
+part.write(uploadPath+filename+"."+fext);
+
+//Base64エンコードの導出
+String imageBase64 = getBase64ofImage(uploadPath+filename+"."+fext, fext);
+
+/*-----APIサーバへの接続-----*/
 
 
 
