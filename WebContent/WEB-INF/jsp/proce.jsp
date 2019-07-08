@@ -8,7 +8,7 @@
 <%@ page import="javax.imageio.ImageIO" %>
 <%@ page import="java.net.*" %>
 <%@ page import="com.fasterxml.jackson.databind.ObjectMapper" %>
-<%@ page import="com.fasterxml.jackson.databind.JsonNode;" %>
+<%@ page import="com.fasterxml.jackson.databind.JsonNode" %>
 <%!
 /**
 	現在時刻を文字列で返す
