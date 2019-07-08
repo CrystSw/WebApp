@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
 	<servlet>
-		<servlet-name>finaltask</servlet-name>
+		<servlet-name>apiserv</servlet-name>
+		<jsp-file>/WEB-INF/jsp/proce.jsp</jsp-file>
 		<multipart-config>
 			<location>/tmp</location>
 			<max-file-size>2097152</max-file-size>
@@ -9,4 +10,8 @@
 			<file-size-threshold>0</file-size-threshold>
 		</multipart-config>
 	</servlet>
+	<servlet-mapping>
+		<servlet-name>apiserv</servlet-name>
+		<url-pattern>/api</url-pattern>
+	</servlet-mapping>
  </web-app>
