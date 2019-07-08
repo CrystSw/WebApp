@@ -7,6 +7,8 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="javax.imageio.ImageIO" %>
 <%@ page import="java.net.*" %>
+<%@ page import="com.fasterxml.jackson.databind.ObjectMapper" %>
+<%@ page import="com.fasterxml.jackson.databind.JsonNode;" %>
 <%!
 /**
 	現在時刻を文字列で返す
@@ -61,6 +63,27 @@ String getBase64ofImage(String impath, String fext) throws IOException {
 	String base64 = Base64.getEncoder().encodeToString(bImage);
 
 	return base64;
+}
+
+/**
+	結果のJSONをパーサし，スコアを計算する．
+*/
+int calcScore(String json) throws IOException {
+	ObjectMapper mapper = new ObjectMapper();
+	JsonNode root = mapper.readTree(json);
+
+	//スコアの重み
+	int weight = 100;
+	//スコア
+	int score = 0;
+	for(JsonNode n : root.get("localizedObjectAnnotations")){
+		if(n.get("name").asText().equals("Cat")){
+			score += weight * n.get("score").asInt();
+			weight /= 2;
+		}
+	}
+
+	return score;
 }
 
 /**
@@ -229,14 +252,14 @@ String imageBase64 = getBase64ofImage(uploadPath+filename+"."+fext, fext);
 //POST文字列の生成
 StringBuilder postStr = new StringBuilder();
 postStr.append("{");
-postStr.append("\"requests\" : [");
+postStr.append("\"requests\": [");
 postStr.append("{");
-postStr.append("\"image\" : {");
-postStr.append("\"content\" :  \""+imageBase64+"\"");
+postStr.append("\"image\": {");
+postStr.append("\"content\":  \""+imageBase64+"\"");
 postStr.append("},");
-postStr.append("\"features\" : [");
+postStr.append("\"features\": [");
 postStr.append("{");
-postStr.append("\"type\" : \"OBJECT_LOCALIZATION\"");
+postStr.append("\"type\": \"OBJECT_LOCALIZATION\"");
 postStr.append("}");
 postStr.append("]");
 postStr.append("}");
@@ -245,11 +268,10 @@ postStr.append("}");
 
 APIAccess api = new APIAccess("https://vision.googleapis.com/v1/images:annotate?key="+apiKey, postStr.toString());
 
-
 } catch(Exception e) {
-	msg.append("\"ServiceInfo\" : [");
-	msg.append("{\"status\" : \"error\"},");
-	msg.append("{\"exception\" : \""+e.getClass().getName()+"\"}");
+	msg.append("\"ServiceInfo\": [");
+	msg.append("{\"status\": \"error\"},");
+	msg.append("{\"exception\": \""+e.getClass().getName()+"\"}");
 	msg.append("]");
 }
 %>
