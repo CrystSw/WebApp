@@ -6,6 +6,7 @@
 <%@ page import="java.awt.image.BufferedImage" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="javax.imageio.ImageIO" %>
+<%@ page import="javax.servlet.ServletException" %>
 <%!
 /**
 	現在時刻を文字列で返す
@@ -120,6 +121,9 @@ public class DatabaseAccess{
 
 %>
 <%
+StringBuilder msg = new StringBuilder();
+
+try{
 /*-----投稿者名の取得-----*/
 String user = request.getParameter("u");
 
@@ -139,18 +143,15 @@ part.write(uploadPath+filename+"."+fext);
 //Base64エンコードの導出
 String imageBase64 = getBase64ofImage(uploadPath+filename+"."+fext, fext);
 
+
 /*-----APIサーバへの接続-----*/
 
 
-
+} catch(Exception e) {
+	msg.append("\"ServiceInfo\" : [");
+	msg.append("\t{\"status\" : \"error\"},");
+	msg.append("\t{\"exception\" : \""+e.getClass().getName()+"\"}");
+	msg.append("]");
+}
 %>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
-</head>
-<body>
-
-</body>
-</html>
+<%= msg %>
