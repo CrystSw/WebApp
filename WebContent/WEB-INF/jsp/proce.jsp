@@ -6,7 +6,6 @@
 <%@ page import="java.awt.image.BufferedImage" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="javax.imageio.ImageIO" %>
-<%@ page import="javax.servlet.ServletException" %>
 <%!
 /**
 	現在時刻を文字列で返す
