@@ -1,11 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ page import="java.io.IOException, java.io.File, java.io.ByteArrayOutputStream, java.io.BufferedOutputStream" %>
-<%@ page import="java.util.Date, java.util.Base64" %>
+<%@ page import="java.io.BufferedReader, java.io.InputStreamReader, java.io.IOException, java.io.File, java.io.ByteArrayOutputStream, java.io.BufferedOutputStream, java.io.DataOutputStream" %>
+<%@ page import="java.util.Random, java.util.Map, java.util.List, java.util.Iterator, java.util.Date, java.util.Base64" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.awt.image.BufferedImage" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="javax.imageio.ImageIO" %>
+<%@ page import="java.net.*" %>
 <%!
 /**
 	現在時刻を文字列で返す
@@ -118,9 +119,91 @@ public class DatabaseAccess{
 	}
 }
 
+/**
+	APIサーバへの接続クラス
+*/
+public class APIAccess {
+    public String url = ""; /* URL */
+    public String postStr = "";	/*POSTデータ*/
+    public String encoding = "UTF-8"; /* レスポンスの文字コード */
+    public String header = ""; /* レスポンスヘッダ文字列 */
+    public String body = ""; /* レスポンスボディ */
+
+    /**
+		接続するWebサーバのURLとPOSTするデータを指定する
+
+		@param url - WebサーバのURL
+		@param postStr - POST文字列
+	*/
+    public APIAccess(String url, String postStr) {
+		this.url = url;
+		this.postStr = postStr;
+    }
+
+	/**
+		Webサーバにアクセスし，headerおよびbodyに値を格納する
+	*/
+	public void doAccess() throws MalformedURLException, ProtocolException, IOException {
+		/* 接続準備 */
+		URL u = new URL(url);
+		HttpURLConnection con = (HttpURLConnection)u.openConnection();
+		DataOutputStream dos = null;
+
+		con.setRequestMethod("POST");
+		con.setInstanceFollowRedirects(true);
+
+		/* POSTデータの設定 */
+		con.setRequestProperty("Content-Type", String.format("text/plain; boundary=%s", String.format("%x", new Random().hashCode())));
+		con.setRequestProperty("Content-Length", String.valueOf(postStr.getBytes(encoding).length));
+
+		/* データのPOST */
+		dos = new DataOutputStream(con.getOutputStream());
+		dos.writeBytes(postStr);
+
+		/* 接続 */
+		con.connect();
+
+		/* レスポンスヘッダの獲得 */
+		Map<String, List<String>> headers = con.getHeaderFields();
+		StringBuilder sb = new StringBuilder();
+		Iterator<String> it = headers.keySet().iterator();
+
+		while (it.hasNext()) {
+		    String key = (String) it.next();
+		    sb.append("  " + key + ": " + headers.get(key) + "\n");
+		}
+
+		/* レスポンスコードとメッセージ */
+		sb.append("RESPONSE CODE [" + con.getResponseCode() + "]\n");
+		sb.append("RESPONSE MESSAGE [" + con.getResponseMessage() + "]\n");
+
+		header = sb.toString();
+
+		/* レスポンスボディの獲得 */
+		BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream(), encoding));
+		String line;
+		sb = new StringBuilder();
+
+		while ((line = reader.readLine()) != null) {
+		    sb.append(line + "\n");
+		}
+
+		body = sb.toString();
+
+		/* 接続終了 */
+		reader.close();
+		con.disconnect();
+		if(dos != null){
+			dos.flush();
+			dos.close();
+		}
+    }
+}
+
 %>
 <%
 StringBuilder msg = new StringBuilder();
+final String apiKey = "";
 
 try{
 /*-----投稿者名の取得-----*/
@@ -142,14 +225,31 @@ part.write(uploadPath+filename+"."+fext);
 //Base64エンコードの導出
 String imageBase64 = getBase64ofImage(uploadPath+filename+"."+fext, fext);
 
-
 /*-----APIサーバへの接続-----*/
+//POST文字列の生成
+StringBuilder postStr = new StringBuilder();
+postStr.append("{");
+postStr.append("\"requests\" : [");
+postStr.append("{");
+postStr.append("\"image\" : {");
+postStr.append("\"content\" :  \""+imageBase64+"\"");
+postStr.append("},");
+postStr.append("\"features\" : [");
+postStr.append("{");
+postStr.append("\"type\" : \"OBJECT_LOCALIZATION\"");
+postStr.append("}");
+postStr.append("]");
+postStr.append("}");
+postStr.append("]");
+postStr.append("}");
+
+APIAccess api = new APIAccess("https://vision.googleapis.com/v1/images:annotate?key="+apiKey, postStr.toString());
 
 
 } catch(Exception e) {
 	msg.append("\"ServiceInfo\" : [");
-	msg.append("\t{\"status\" : \"error\"},");
-	msg.append("\t{\"exception\" : \""+e.getClass().getName()+"\"}");
+	msg.append("{\"status\" : \"error\"},");
+	msg.append("{\"exception\" : \""+e.getClass().getName()+"\"}");
 	msg.append("]");
 }
 %>
