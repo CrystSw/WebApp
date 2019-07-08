@@ -268,6 +268,17 @@ postStr.append("}");
 
 APIAccess api = new APIAccess("https://vision.googleapis.com/v1/images:annotate?key="+apiKey, postStr.toString());
 
+//スコアの計算
+int score = calcScore(api.body);
+
+//データベースへ記録
+DatabaseAccess da = new DatabaseAccess(getServletContext().getRealPath("/WEB-INF/lib")+"/data.db");
+da.requestSQL("insert into data(filename, username, score) values("+filename+"."+fext+", "+user+", "+score+")");
+da.destructor();
+
+//トップページへリダイレクト
+response.sendRedirect("https://ohama.sys.wakayama-u.ac.jp:39780/");
+
 } catch(Exception e) {
 	msg.append("\"ServiceInfo\": [");
 	msg.append("{\"status\": \"error\"},");
