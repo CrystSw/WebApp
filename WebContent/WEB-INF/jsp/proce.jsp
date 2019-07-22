@@ -225,6 +225,8 @@ public class APIAccess {
 
 %>
 <%
+response.addHeader("Access-Control-Allow-Origin", "*");
+
 StringBuilder msg = new StringBuilder();
 final String apiKey = "";
 
@@ -280,10 +282,6 @@ da.destructor();
 response.sendRedirect("../");
 
 } catch(Exception e) {
-	msg.append("\"ServiceInfo\": [");
-	msg.append("{\"status\": \"error\"},");
-	msg.append("{\"exception\": \""+e.getClass().getName()+"\"}");
-	msg.append("]");
+
 }
 %>
-<%= msg %>
