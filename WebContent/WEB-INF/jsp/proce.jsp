@@ -277,7 +277,7 @@ da.requestSQL("insert into data(filename, username, score) values("+filename+"."
 da.destructor();
 
 //トップページへリダイレクト
-response.sendRedirect("https://ohama.sys.wakayama-u.ac.jp:39780/");
+response.sendRedirect("../");
 
 } catch(Exception e) {
 	msg.append("\"ServiceInfo\": [");
