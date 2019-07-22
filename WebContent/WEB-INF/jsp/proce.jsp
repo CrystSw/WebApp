@@ -278,10 +278,12 @@ DatabaseAccess da = new DatabaseAccess(getServletContext().getRealPath("/WEB-INF
 da.requestSQL("insert into data(filename, username, score) values("+filename+"."+fext+", "+user+", "+score+")");
 da.destructor();
 
-//トップページへリダイレクト
-response.sendRedirect("../");
 
 } catch(Exception e) {
 
 }
+
+//トップページへリダイレクト
+response.sendRedirect("../");
+
 %>
