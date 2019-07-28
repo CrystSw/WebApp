@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ page import="java.io.BufferedReader, java.io.InputStreamReader, java.io.IOException, java.io.File, java.io.ByteArrayOutputStream, java.io.BufferedOutputStream, java.io.DataOutputStream" %>
-<%@ page import="java.util.Random, java.util.Map, java.util.List, java.util.Iterator, java.util.Date, java.util.Base64" %>
+<%@ page import="java.io.*, java.io.StringWriter, java.io.PrintWriter, java.io.BufferedReader, java.io.InputStreamReader, java.io.IOException, java.io.File, java.io.ByteArrayOutputStream, java.io.BufferedOutputStream, java.io.DataOutputStream" %>
+<%@ page import="java.util.Random, java.util.Map, java.util.List, java.util.Iterator, java.util.Date, java.util.Base64, java.util.stream.*" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.awt.image.BufferedImage" %>
 <%@ page import="java.sql.*" %>
@@ -76,9 +76,14 @@ int calcScore(String json) throws IOException {
 	int weight = 100;
 	//スコア
 	int score = 0;
+
+	String apiResponse = root.get("responses").toString();
+	apiResponse = apiResponse.substring(1, apiResponse.length()-1);
+	root = mapper.readTree(apiResponse);
+
 	for(JsonNode n : root.get("localizedObjectAnnotations")){
 		if(n.get("name").asText().equals("Cat")){
-			score += weight * n.get("score").asInt();
+			score += weight * n.get("score").asDouble();
 			weight /= 2;
 		}
 	}
@@ -100,8 +105,7 @@ public class DatabaseAccess{
 		@param dbpath - データベースファイルへのパス
 	*/
 	DatabaseAccess(String dbpath) throws SQLException, ClassNotFoundException{
-		Class.forName("org.sqlite.JDBC");
-		conn = DriverManager.getConnection(dbpath);
+		conn = DriverManager.getConnection("jdbc:sqlite:"+dbpath);
 	}
 
 	/**
@@ -114,6 +118,17 @@ public class DatabaseAccess{
 		state = conn.createStatement();
 		rs = state.executeQuery(sql);
 		return rs;
+	}
+
+	/**
+		SQLを実行する．
+
+		@param sql - エスケープされたSQL文
+		@return ResultSet
+	*/
+	public void requestSQLWithoutResultSet(String sql) throws SQLException {
+		state = conn.createStatement();
+		state.executeUpdate(sql);
 	}
 
 	/**
@@ -170,18 +185,19 @@ public class APIAccess {
 		/* 接続準備 */
 		URL u = new URL(url);
 		HttpURLConnection con = (HttpURLConnection)u.openConnection();
-		DataOutputStream dos = null;
 
+		con.setDoOutput(true);
 		con.setRequestMethod("POST");
-		con.setInstanceFollowRedirects(true);
+		con.setRequestProperty("Accept-Language", "jp");
 
 		/* POSTデータの設定 */
-		con.setRequestProperty("Content-Type", String.format("text/plain; boundary=%s", String.format("%x", new Random().hashCode())));
-		con.setRequestProperty("Content-Length", String.valueOf(postStr.getBytes(encoding).length));
+		con.setRequestProperty("Content-Type", "application/JSON; charset=urf-8");
+		con.setRequestProperty("Content-Length", String.valueOf(postStr));
 
 		/* データのPOST */
-		dos = new DataOutputStream(con.getOutputStream());
-		dos.writeBytes(postStr);
+		OutputStreamWriter out = new OutputStreamWriter(con.getOutputStream());
+		out.write(postStr);
+		out.flush();
 
 		/* 接続 */
 		con.connect();
@@ -216,15 +232,16 @@ public class APIAccess {
 		/* 接続終了 */
 		reader.close();
 		con.disconnect();
-		if(dos != null){
-			dos.flush();
-			dos.close();
+		if(out != null){
+			out.flush();
+			out.close();
 		}
-    }
+	}
 }
 
 %>
 <%
+Class.forName("org.sqlite.JDBC");
 response.addHeader("Access-Control-Allow-Origin", "*");
 
 StringBuilder msg = new StringBuilder();
@@ -246,10 +263,8 @@ String fext = getFileExtension(part);
 String filename = getTimeString();
 //ファイルの書き込み(上限2MB)
 part.write(uploadPath+filename+"."+fext);
-
 //Base64エンコードの導出
 String imageBase64 = getBase64ofImage(uploadPath+filename+"."+fext, fext);
-
 /*-----APIサーバへの接続-----*/
 //POST文字列の生成
 StringBuilder postStr = new StringBuilder();
@@ -267,23 +282,34 @@ postStr.append("]");
 postStr.append("}");
 postStr.append("]");
 postStr.append("}");
-
 APIAccess api = new APIAccess("https://vision.googleapis.com/v1/images:annotate?key="+apiKey, postStr.toString());
+api.doAccess();
+
+//デバッグ用
+//String body = "{ \"responses\": [{\"localizedObjectAnnotations\":[{\"mid\":\"/m/01yrx\",\"name\":\"Cat\",\"score\":0.8042676,\"boundingPoly\":{\"normalizedVertices\":[{\"x\":0.41500005,\"y\":0.335},{\"x\":0.9304118,\"y\":0.335},{\"x\":0.9304118,\"y\":0.7468824},{\"x\":0.41500005,\"y\":0.7468824}]}},{\"mid\":\"/m/0jbk\",\"name\":\"Animal\",\"score\":0.7112062,\"boundingPoly\":{\"normalizedVertices\":[{\"x\":0.41500005,\"y\":0.335},{\"x\":0.9304118,\"y\":0.335},{\"x\":0.9304118,\"y\":0.7468824},{\"x\":0.41500005,\"y\":0.7468824}]}}]}]}";
 
 //スコアの計算
 int score = calcScore(api.body);
 
 //データベースへ記録
 DatabaseAccess da = new DatabaseAccess(getServletContext().getRealPath("/WEB-INF/lib")+"/data.db");
-da.requestSQL("insert into data(filename, username, score) values("+filename+"."+fext+", "+user+", "+score+")");
+da.requestSQLWithoutResultSet("insert into data(filename, username, score) values(\""+filename+"."+fext+"\", \""+user+"\", "+score+")");
 da.destructor();
+
+//トップページへリダイレクト
+response.sendRedirect("../?score="+score);
 
 
 } catch(Exception e) {
-
+	/*msg.append("{\"url\" : \"error\"}");
+	msg.append("{\"exception\" : \""+e.getClass().getName()+"\"}");
+	StringWriter sw = new StringWriter();
+	PrintWriter pw = new PrintWriter(sw);
+	e.printStackTrace(pw);
+	pw.flush();
+	msg.append(sw.toString());*/
+	msg.append("エラーが発生しました．お手数おかけしますが，もう一度アップロードしなおしてください．");
 }
 
-//トップページへリダイレクト
-response.sendRedirect("../");
-
 %>
+<%= msg.toString() %>
